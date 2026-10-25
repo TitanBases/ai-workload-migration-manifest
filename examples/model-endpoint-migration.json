@@ -1,0 +1,122 @@
+{
+  "specVersion": "0.1.0",
+  "manifestId": "urn:awmm:example:model-endpoint-migration:001",
+  "status": "approved",
+  "conformanceTarget": "migration-ready",
+  "createdAt": "2026-10-25T00:00:00Z",
+  "workload": {
+    "id": "claims-assistant",
+    "name": "Claims Assistant",
+    "kind": "assistant",
+    "criticality": "high",
+    "owner": "AI Platform Team"
+  },
+  "source": {
+    "environmentId": "prod-source",
+    "provider": "provider-a",
+    "runtime": "managed-assistant",
+    "model": "model-a"
+  },
+  "target": {
+    "environmentId": "prod-target",
+    "provider": "provider-b",
+    "runtime": "managed-assistant",
+    "model": "model-b"
+  },
+  "assets": [
+    {
+      "id": "system-instructions",
+      "category": "instructions",
+      "name": "System instructions",
+      "required": true,
+      "portability": "transform-required",
+      "sensitivity": "internal"
+    },
+    {
+      "id": "evaluation-suite",
+      "category": "evaluations",
+      "name": "Critical claims scenarios",
+      "required": true,
+      "portability": "portable",
+      "artifact": {
+        "ref": "./evals/claims-critical.jsonl",
+        "mediaType": "application/jsonl"
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "source-model-api",
+      "category": "model",
+      "name": "Source model API",
+      "required": true,
+      "migrationTreatment": "replace",
+      "sourceRef": "provider-a:model-a",
+      "targetRef": "provider-b:model-b"
+    }
+  ],
+  "transformations": [
+    {
+      "id": "adapt-system-instructions",
+      "type": "prompt-adaptation",
+      "assetRefs": [
+        "system-instructions"
+      ],
+      "description": "Adapt model-specific instruction syntax while preserving approved policy semantics.",
+      "reversible": true
+    }
+  ],
+  "risks": [
+    {
+      "id": "behavioral-drift-risk",
+      "category": "behavioral-drift",
+      "severity": "high",
+      "likelihood": "possible",
+      "description": "The target model may handle ambiguous claims differently.",
+      "mitigations": [
+        "Run the approved critical-scenario evaluation before traffic cutover."
+      ],
+      "acceptanceGateRefs": [
+        "behavioral-parity"
+      ]
+    }
+  ],
+  "baselines": [
+    {
+      "id": "critical-scenario-baseline",
+      "domain": "behavioral",
+      "description": "Approved source pass rate across critical scenarios.",
+      "metric": "critical_scenario_pass_rate",
+      "value": 1,
+      "unit": "ratio",
+      "datasetRef": "./evals/claims-critical.jsonl"
+    }
+  ],
+  "acceptanceGates": [
+    {
+      "id": "behavioral-parity",
+      "domain": "behavioral",
+      "criterion": "Target critical-scenario pass rate must equal the approved source baseline.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "eq",
+      "threshold": 1,
+      "unit": "ratio",
+      "baselineRef": "critical-scenario-baseline"
+    }
+  ],
+  "rollback": {
+    "required": true,
+    "strategy": "Restore source routing and source instruction revision if the behavioral gate fails.",
+    "triggerConditions": [
+      "Any blocking acceptance gate fails."
+    ],
+    "sourceSnapshotRef": "git:claims-assistant/config@source-approved",
+    "maxRtoMinutes": 15,
+    "validated": false
+  },
+  "provenance": {
+    "owner": "AI Platform Team",
+    "generatedBy": "AWMM example author"
+  }
+}

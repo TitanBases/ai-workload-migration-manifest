@@ -1,0 +1,37 @@
+{
+  "specVersion": "0.1.0",
+  "manifestId": "urn:awmm:example:core-inventory:001",
+  "status": "draft",
+  "conformanceTarget": "core",
+  "workload": {
+    "id": "document-assistant",
+    "name": "Document Assistant",
+    "kind": "rag",
+    "criticality": "medium"
+  },
+  "source": {
+    "environmentId": "source-dev",
+    "provider": "provider-a",
+    "runtime": "rag-runtime-a"
+  },
+  "target": {
+    "environmentId": "target-dev",
+    "provider": "provider-b",
+    "runtime": "rag-runtime-b"
+  },
+  "assets": [
+    {
+      "id": "instructions",
+      "category": "instructions",
+      "required": true,
+      "portability": "portable"
+    },
+    {
+      "id": "retrieval-index",
+      "category": "retrieval-data",
+      "required": true,
+      "portability": "unknown",
+      "notes": "Discovery has not yet established the target representation."
+    }
+  ]
+}

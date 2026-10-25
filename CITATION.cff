@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use or discuss AWMM, please cite this repository and the specification version."
+title: "AI Workload Migration Manifest (AWMM)"
+version: "0.1.0"
+date-released: 2026-10-25
+authors:
+  - name: "TitanBases Technology Co., Ltd."
+license: Apache-2.0
+repository-code: "https://github.com/TitanBases/ai-workload-migration-manifest"
+url: "https://github.com/TitanBases/ai-workload-migration-manifest"
+keywords:
+  - AI migration
+  - AI workload migration
+  - agent portability
+  - migration manifest
+  - AI architecture
+  - acceptance gates
+type: software

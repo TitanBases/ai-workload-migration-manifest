@@ -1,0 +1,327 @@
+{
+  "specVersion": "0.1.0",
+  "manifestId": "urn:awmm:example:enterprise-agent-evidence-complete:001",
+  "status": "validated",
+  "conformanceTarget": "evidence-complete",
+  "createdAt": "2026-10-25T00:00:00Z",
+  "updatedAt": "2026-10-25T02:00:00Z",
+  "workload": {
+    "id": "research-agent",
+    "name": "Enterprise Research Agent",
+    "kind": "agent",
+    "criticality": "high",
+    "owner": "Enterprise AI"
+  },
+  "source": {
+    "environmentId": "source-prod",
+    "provider": "cloud-a",
+    "runtime": "agent-platform-a",
+    "runtimeVersion": "3.8",
+    "region": "region-a",
+    "model": "model-a"
+  },
+  "target": {
+    "environmentId": "target-prod",
+    "provider": "cloud-b",
+    "runtime": "agent-platform-b",
+    "runtimeVersion": "1.6",
+    "region": "region-b",
+    "model": "model-b"
+  },
+  "assets": [
+    {
+      "id": "instructions",
+      "category": "instructions",
+      "required": true,
+      "portability": "portable",
+      "artifact": {
+        "ref": "git:research-agent/instructions@abc123",
+        "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "id": "skills",
+      "category": "skills",
+      "required": true,
+      "portability": "portable",
+      "format": "Agent Skills",
+      "artifact": {
+        "ref": "git:research-agent/skills@abc123",
+        "sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    {
+      "id": "memory",
+      "category": "memory",
+      "required": true,
+      "portability": "transform-required",
+      "format": "neutral-memory-export",
+      "artifact": {
+        "ref": "urn:example:artifact:memory-export",
+        "sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "sensitivity": "confidential"
+    },
+    {
+      "id": "permissions",
+      "category": "permissions",
+      "required": true,
+      "portability": "rebind-required",
+      "sourceRef": "iam://source/research-agent",
+      "targetRef": "iam://target/research-agent",
+      "sensitivity": "restricted"
+    },
+    {
+      "id": "secrets",
+      "category": "secrets",
+      "required": true,
+      "portability": "rebind-required",
+      "sourceRef": "secret-store://source/research-agent",
+      "targetRef": "secret-store://target/research-agent",
+      "sensitivity": "restricted"
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "search-mcp",
+      "category": "protocol",
+      "name": "Enterprise Search MCP server",
+      "required": true,
+      "protocol": "MCP",
+      "sourceRef": "mcp://source/search",
+      "targetRef": "mcp://target/search",
+      "migrationTreatment": "rebind"
+    },
+    {
+      "id": "identity-provider",
+      "category": "identity-provider",
+      "name": "Enterprise IdP",
+      "required": true,
+      "sourceRef": "idp://enterprise",
+      "targetRef": "idp://enterprise",
+      "migrationTreatment": "retain"
+    }
+  ],
+  "transformations": [
+    {
+      "id": "memory-transform",
+      "type": "semantic-remap",
+      "assetRefs": [
+        "memory"
+      ],
+      "description": "Normalize source memory and import into the target memory service with provenance identifiers retained.",
+      "reversible": false,
+      "evidenceRefs": [
+        "memory-report"
+      ]
+    },
+    {
+      "id": "permission-map",
+      "type": "identity-rebinding",
+      "assetRefs": [
+        "permissions"
+      ],
+      "description": "Bind approved enterprise roles to target runtime permissions.",
+      "reversible": true,
+      "evidenceRefs": [
+        "permission-review"
+      ]
+    },
+    {
+      "id": "secret-map",
+      "type": "secret-rebinding",
+      "assetRefs": [
+        "secrets"
+      ],
+      "description": "Bind target secret-store references; no secret values are copied through AWMM.",
+      "reversible": true
+    }
+  ],
+  "risks": [
+    {
+      "id": "behavior-drift",
+      "category": "behavioral-drift",
+      "severity": "high",
+      "likelihood": "possible",
+      "description": "Model and runtime changes may alter critical research behavior.",
+      "acceptanceGateRefs": [
+        "critical-scenarios"
+      ]
+    },
+    {
+      "id": "memory-loss",
+      "category": "memory-loss",
+      "severity": "high",
+      "likelihood": "possible",
+      "description": "Imported memory may be incomplete or semantically degraded.",
+      "acceptanceGateRefs": [
+        "memory-recall"
+      ]
+    },
+    {
+      "id": "permission-drift",
+      "category": "permission-drift",
+      "severity": "critical",
+      "likelihood": "unlikely",
+      "description": "Target permissions may exceed approved authority.",
+      "acceptanceGateRefs": [
+        "permission-review-gate"
+      ]
+    }
+  ],
+  "baselines": [
+    {
+      "id": "scenario-baseline",
+      "domain": "behavioral",
+      "description": "Approved critical research scenario baseline.",
+      "metric": "critical_scenario_pass_rate",
+      "value": 1,
+      "unit": "ratio",
+      "measurementRef": "urn:example:baseline:critical-scenarios"
+    },
+    {
+      "id": "memory-baseline",
+      "domain": "memory",
+      "description": "Approved critical memory recall baseline.",
+      "metric": "memory_recall_pass_rate",
+      "value": 1,
+      "unit": "ratio",
+      "measurementRef": "urn:example:baseline:memory-recall"
+    }
+  ],
+  "acceptanceGates": [
+    {
+      "id": "critical-scenarios",
+      "domain": "behavioral",
+      "criterion": "All critical scenarios pass.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "eq",
+      "threshold": 1,
+      "unit": "ratio",
+      "baselineRef": "scenario-baseline",
+      "result": {
+        "status": "passed",
+        "observed": 1,
+        "evidenceRefs": [
+          "behavior-report"
+        ]
+      }
+    },
+    {
+      "id": "memory-recall",
+      "domain": "memory-integrity",
+      "criterion": "All critical memory recall scenarios pass.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "eq",
+      "threshold": 1,
+      "unit": "ratio",
+      "baselineRef": "memory-baseline",
+      "result": {
+        "status": "passed",
+        "observed": 1,
+        "evidenceRefs": [
+          "memory-report"
+        ]
+      }
+    },
+    {
+      "id": "permission-review-gate",
+      "domain": "identity-permissions",
+      "criterion": "Target permissions are reviewed and no broader than approved source authority.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "human-review",
+      "result": {
+        "status": "passed",
+        "observed": "approved",
+        "evidenceRefs": [
+          "permission-review"
+        ]
+      }
+    },
+    {
+      "id": "rollback-drill",
+      "domain": "rollback",
+      "criterion": "Rollback drill returns authority to source within the recovery objective.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "lte",
+      "threshold": 30,
+      "unit": "minutes",
+      "result": {
+        "status": "passed",
+        "observed": 18,
+        "evidenceRefs": [
+          "rollback-report"
+        ]
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "behavior-report",
+      "type": "test-report",
+      "ref": "urn:example:evidence:behavior-report",
+      "generatedAt": "2026-10-25T01:00:00Z",
+      "producer": "example-evaluation-harness",
+      "gateRefs": [
+        "critical-scenarios"
+      ]
+    },
+    {
+      "id": "memory-report",
+      "type": "test-report",
+      "ref": "urn:example:evidence:memory-report",
+      "generatedAt": "2026-10-25T01:10:00Z",
+      "producer": "example-memory-evaluation",
+      "gateRefs": [
+        "memory-recall"
+      ]
+    },
+    {
+      "id": "permission-review",
+      "type": "approval",
+      "ref": "urn:example:evidence:permission-review",
+      "generatedAt": "2026-10-25T01:20:00Z",
+      "producer": "example-security-review",
+      "gateRefs": [
+        "permission-review-gate"
+      ]
+    },
+    {
+      "id": "rollback-report",
+      "type": "test-report",
+      "ref": "urn:example:evidence:rollback-report",
+      "generatedAt": "2026-10-25T01:40:00Z",
+      "producer": "example-operations-drill",
+      "gateRefs": [
+        "rollback-drill"
+      ]
+    }
+  ],
+  "rollback": {
+    "required": true,
+    "strategy": "Fence target execution, restore source routing and source authority, then verify source health before reopening traffic.",
+    "triggerConditions": [
+      "Any blocking gate fails.",
+      "Post-cutover critical incident requires reversal."
+    ],
+    "sourceSnapshotRef": "snapshot://research-agent/source-approved",
+    "maxRtoMinutes": 30,
+    "validated": true,
+    "evidenceRefs": [
+      "rollback-report"
+    ]
+  },
+  "provenance": {
+    "owner": "Enterprise AI",
+    "generatedBy": "AWMM example author",
+    "approvedBy": "Example migration authority",
+    "sourceRevision": "example:abc123",
+    "toolVersions": {
+      "awmm-validator": "0.1.0"
+    }
+  }
+}

@@ -19,5 +19,13 @@ jobs:
           cache: pip
       - name: Install validator dependencies
         run: python -m pip install -r requirements.txt
-      - name: Validate examples
+      - name: Validate conforming examples
         run: python scripts/validate.py examples/
+      - name: Confirm invalid fixture is rejected
+        shell: bash
+        run: |
+          if python scripts/validate.py tests/invalid/unknown-asset-ref.json; then
+            echo "Invalid fixture was incorrectly accepted."
+            exit 1
+          fi
+          echo "Invalid fixture rejected as expected."

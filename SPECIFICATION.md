@@ -260,7 +260,7 @@ In addition to Core, a Migration-Ready manifest MUST:
 - declare `conformanceTarget: "migration-ready"`;
 - include at least one acceptance gate;
 - include a rollback plan;
-- have no required asset with `portability: "unknown"`;
+- have no required asset with `portability: "unknown"` or `portability: "unsupported"`;
 - provide a transformation for every required `transform-required` asset;
 - have no required dependency whose migration treatment is `unresolved`.
 

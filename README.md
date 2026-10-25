@@ -1,5 +1,7 @@
 # AI Workload Migration Manifest (AWMM)
 
+[![Validate AWMM](https://github.com/TitanBases/ai-workload-migration-manifest/actions/workflows/validate.yml/badge.svg)](https://github.com/TitanBases/ai-workload-migration-manifest/actions/workflows/validate.yml)
+
 > **Status:** Draft Specification v0.1.0  
 > **Maintainer:** TitanBases Technology  
 > **License:** Apache-2.0
@@ -155,7 +157,7 @@ v0.1.0 is a **draft**, not a claim of industry-standard status or universal migr
 
 Issues and pull requests are welcome. Material changes to normative semantics should include rationale, compatibility impact and updated examples or fixtures where applicable.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [GOVERNANCE.md](GOVERNANCE.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md), and the non-normative [ROADMAP.md](ROADMAP.md). Citation metadata is available in [CITATION.cff](CITATION.cff).
 
 ## License
 

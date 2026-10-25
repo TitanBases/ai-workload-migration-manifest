@@ -1,0 +1,49 @@
+{
+  "specVersion": "0.1.0",
+  "manifestId": "urn:awmm:test:invalid-reference:001",
+  "status": "ready-for-review",
+  "conformanceTarget": "migration-ready",
+  "workload": {
+    "id": "invalid-test",
+    "name": "Invalid Test Workload",
+    "kind": "agent",
+    "criticality": "low"
+  },
+  "source": {
+    "environmentId": "source"
+  },
+  "target": {
+    "environmentId": "target"
+  },
+  "assets": [
+    {
+      "id": "instructions",
+      "category": "instructions",
+      "required": true,
+      "portability": "transform-required"
+    }
+  ],
+  "transformations": [
+    {
+      "id": "bad-transform",
+      "type": "prompt-adaptation",
+      "assetRefs": [
+        "missing-asset"
+      ],
+      "description": "This fixture must fail because the referenced asset does not exist."
+    }
+  ],
+  "acceptanceGates": [
+    {
+      "id": "basic-gate",
+      "domain": "functional",
+      "criterion": "Synthetic gate.",
+      "blocking": true,
+      "evidenceRequired": false
+    }
+  ],
+  "rollback": {
+    "required": true,
+    "strategy": "Synthetic rollback."
+  }
+}

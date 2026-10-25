@@ -1,0 +1,254 @@
+{
+  "specVersion": "0.1.0",
+  "manifestId": "urn:awmm:example:mcp-agent-runtime-migration:001",
+  "status": "ready-for-review",
+  "conformanceTarget": "migration-ready",
+  "workload": {
+    "id": "support-agent",
+    "name": "Enterprise Support Agent",
+    "kind": "agent",
+    "criticality": "mission-critical"
+  },
+  "source": {
+    "environmentId": "runtime-a-prod",
+    "provider": "vendor-a",
+    "runtime": "agent-runtime-a",
+    "runtimeVersion": "4.2",
+    "model": "model-family-a"
+  },
+  "target": {
+    "environmentId": "runtime-b-prod",
+    "provider": "vendor-b",
+    "runtime": "agent-runtime-b",
+    "runtimeVersion": "2.0",
+    "model": "model-family-b"
+  },
+  "assets": [
+    {
+      "id": "core-instructions",
+      "category": "instructions",
+      "required": true,
+      "portability": "portable",
+      "sourceRef": "git:agent-config/instructions.md",
+      "targetRef": "git:agent-config/instructions.md",
+      "sensitivity": "internal"
+    },
+    {
+      "id": "agent-skills",
+      "category": "skills",
+      "required": true,
+      "portability": "portable",
+      "format": "Agent Skills",
+      "sourceRef": "git:agent-config/skills/",
+      "targetRef": "git:agent-config/skills/"
+    },
+    {
+      "id": "mcp-tool-bindings",
+      "category": "tools",
+      "required": true,
+      "portability": "rebind-required",
+      "protocol": "MCP",
+      "sourceRef": "runtime-a:mcp-bindings",
+      "targetRef": "runtime-b:mcp-bindings"
+    },
+    {
+      "id": "durable-memory",
+      "category": "memory",
+      "required": true,
+      "portability": "transform-required",
+      "format": "source-runtime-memory",
+      "sensitivity": "confidential"
+    },
+    {
+      "id": "runtime-permissions",
+      "category": "permissions",
+      "required": true,
+      "portability": "rebind-required",
+      "sensitivity": "restricted"
+    },
+    {
+      "id": "runtime-secrets",
+      "category": "secrets",
+      "required": true,
+      "portability": "rebind-required",
+      "sourceRef": "secret-store://source/support-agent",
+      "targetRef": "secret-store://target/support-agent",
+      "sensitivity": "restricted"
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "mcp-crm",
+      "category": "protocol",
+      "name": "CRM MCP server",
+      "required": true,
+      "protocol": "MCP",
+      "sourceRef": "mcp://source/crm",
+      "targetRef": "mcp://target/crm",
+      "migrationTreatment": "rebind"
+    },
+    {
+      "id": "mcp-ticketing",
+      "category": "protocol",
+      "name": "Ticketing MCP server",
+      "required": true,
+      "protocol": "MCP",
+      "sourceRef": "mcp://source/ticketing",
+      "targetRef": "mcp://target/ticketing",
+      "migrationTreatment": "rebind"
+    },
+    {
+      "id": "model-api",
+      "category": "model",
+      "name": "Inference model",
+      "required": true,
+      "sourceRef": "provider-a:model-family-a",
+      "targetRef": "provider-b:model-family-b",
+      "migrationTreatment": "replace"
+    },
+    {
+      "id": "secret-store",
+      "category": "secret-store",
+      "name": "Runtime secret store",
+      "required": true,
+      "sourceRef": "secret-store://source",
+      "targetRef": "secret-store://target",
+      "migrationTreatment": "rebind"
+    }
+  ],
+  "transformations": [
+    {
+      "id": "memory-normalization",
+      "type": "semantic-remap",
+      "assetRefs": [
+        "durable-memory"
+      ],
+      "description": "Export source memory to an approved neutral intermediate representation, then import with provenance retained.",
+      "reversible": false
+    },
+    {
+      "id": "permissions-rebind",
+      "type": "identity-rebinding",
+      "assetRefs": [
+        "runtime-permissions"
+      ],
+      "description": "Map source runtime roles to explicitly reviewed target runtime roles.",
+      "reversible": true
+    },
+    {
+      "id": "secret-rebind",
+      "type": "secret-rebinding",
+      "assetRefs": [
+        "runtime-secrets"
+      ],
+      "description": "Create target secret references without copying secret values into the manifest.",
+      "reversible": true
+    }
+  ],
+  "risks": [
+    {
+      "id": "tool-contract-drift",
+      "category": "tool-contract-breakage",
+      "severity": "critical",
+      "likelihood": "possible",
+      "description": "Tool schemas or runtime handling may differ after MCP rebinding.",
+      "mitigations": [
+        "Replay contract tests for every required MCP tool."
+      ],
+      "acceptanceGateRefs": [
+        "mcp-contracts"
+      ]
+    },
+    {
+      "id": "permission-drift",
+      "category": "permission-drift",
+      "severity": "critical",
+      "likelihood": "possible",
+      "description": "Target runtime permissions may be broader or narrower than the approved source policy.",
+      "mitigations": [
+        "Require explicit permission matrix review."
+      ],
+      "acceptanceGateRefs": [
+        "permission-parity"
+      ]
+    },
+    {
+      "id": "memory-semantic-loss",
+      "category": "memory-loss",
+      "severity": "high",
+      "likelihood": "possible",
+      "description": "Memory import may preserve records syntactically while losing retrieval semantics.",
+      "mitigations": [
+        "Run memory recall scenarios against the target."
+      ],
+      "acceptanceGateRefs": [
+        "memory-integrity"
+      ]
+    }
+  ],
+  "baselines": [
+    {
+      "id": "tool-contract-baseline",
+      "domain": "tool-contract",
+      "description": "All required tool contract tests pass at source.",
+      "metric": "required_tool_contract_pass_rate",
+      "value": 1,
+      "unit": "ratio"
+    },
+    {
+      "id": "memory-baseline",
+      "domain": "memory",
+      "description": "Approved recall suite at source.",
+      "metric": "critical_memory_recall_pass_rate",
+      "value": 1,
+      "unit": "ratio"
+    }
+  ],
+  "acceptanceGates": [
+    {
+      "id": "mcp-contracts",
+      "domain": "tool-contract",
+      "criterion": "All required MCP tool contract tests pass.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "eq",
+      "threshold": 1,
+      "unit": "ratio",
+      "baselineRef": "tool-contract-baseline"
+    },
+    {
+      "id": "permission-parity",
+      "domain": "identity-permissions",
+      "criterion": "Reviewed target permission matrix is no broader than approved source authority.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "human-review"
+    },
+    {
+      "id": "memory-integrity",
+      "domain": "memory-integrity",
+      "criterion": "All critical memory recall scenarios pass after import.",
+      "blocking": true,
+      "evidenceRequired": true,
+      "operator": "eq",
+      "threshold": 1,
+      "unit": "ratio",
+      "baselineRef": "memory-baseline"
+    }
+  ],
+  "rollback": {
+    "required": true,
+    "strategy": "Disable target traffic, restore source runtime authority, and retain target artifacts for forensic comparison.",
+    "triggerConditions": [
+      "Any blocking gate fails.",
+      "Unauthorized permission expansion is detected."
+    ],
+    "sourceSnapshotRef": "snapshot://support-agent/source-approved",
+    "maxRtoMinutes": 30,
+    "validated": false
+  },
+  "provenance": {
+    "owner": "Enterprise AI Platform",
+    "generatedBy": "AWMM example author"
+  }
+}
